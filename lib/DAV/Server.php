@@ -16,7 +16,8 @@ use
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Server extends EventEmitter {
+class Server extends EventEmitter
+{
 
     /**
      * Infinity is used for some request supporting the HTTP Depth header and indicates that the operation should traverse the entire tree
@@ -199,7 +200,8 @@ class Server extends EventEmitter {
      *
      * @param Tree|INode|array|null $treeOrNode The tree object
      */
-    function __construct($treeOrNode = null) {
+    function __construct($treeOrNode = null)
+    {
 
         if ($treeOrNode instanceof Tree) {
             $this->tree = $treeOrNode;
@@ -209,7 +211,7 @@ class Server extends EventEmitter {
 
             // If it's an array, a list of nodes was passed, and we need to
             // create the root node.
-            foreach($treeOrNode as $node) {
+            foreach ($treeOrNode as $node) {
                 if (!($node instanceof INode)) {
                     throw new Exception('Invalid argument passed to constructor. If you\'re passing an array, all the values must implement Sabre\\DAV\\INode');
                 }
@@ -237,7 +239,8 @@ class Server extends EventEmitter {
      *
      * @return void
      */
-    function exec() {
+    function exec()
+    {
 
         try {
 
@@ -259,51 +262,51 @@ class Server extends EventEmitter {
                 $this->emit('exception', [$e]);
             } catch (\Exception $ignore) {
             }
-            $DOM = new \DOMDocument('1.0','utf-8');
+            $DOM = new \DOMDocument('1.0', 'utf-8');
             $DOM->formatOutput = true;
 
-            $error = $DOM->createElementNS('DAV:','d:error');
-            $error->setAttribute('xmlns:s',self::NS_SABREDAV);
+            $error = $DOM->createElementNS('DAV:', 'd:error');
+            $error->setAttribute('xmlns:s', self::NS_SABREDAV);
             $DOM->appendChild($error);
 
-            $h = function($v) {
+            $h = function ($v) {
 
                 return htmlspecialchars($v, ENT_NOQUOTES, 'UTF-8');
 
             };
 
             if (self::$exposeVersion) {
-                $error->appendChild($DOM->createElement('s:sabredav-version',$h(Version::VERSION)));
+                $error->appendChild($DOM->createElement('s:sabredav-version', $h(Version::VERSION)));
             }
 
-            $error->appendChild($DOM->createElement('s:exception',$h(get_class($e))));
-            $error->appendChild($DOM->createElement('s:message',$h($e->getMessage())));
+            $error->appendChild($DOM->createElement('s:exception', $h(get_class($e))));
+            $error->appendChild($DOM->createElement('s:message', $h($e->getMessage())));
             if ($this->debugExceptions) {
-                $error->appendChild($DOM->createElement('s:file',$h($e->getFile())));
-                $error->appendChild($DOM->createElement('s:line',$h($e->getLine())));
-                $error->appendChild($DOM->createElement('s:code',$h($e->getCode())));
-                $error->appendChild($DOM->createElement('s:stacktrace',$h($e->getTraceAsString())));
+                $error->appendChild($DOM->createElement('s:file', $h($e->getFile())));
+                $error->appendChild($DOM->createElement('s:line', $h($e->getLine())));
+                $error->appendChild($DOM->createElement('s:code', $h($e->getCode())));
+                $error->appendChild($DOM->createElement('s:stacktrace', $h($e->getTraceAsString())));
             }
 
             if ($this->debugExceptions) {
                 $previous = $e;
                 while ($previous = $previous->getPrevious()) {
                     $xPrevious = $DOM->createElement('s:previous-exception');
-                    $xPrevious->appendChild($DOM->createElement('s:exception',$h(get_class($previous))));
-                    $xPrevious->appendChild($DOM->createElement('s:message',$h($previous->getMessage())));
-                    $xPrevious->appendChild($DOM->createElement('s:file',$h($previous->getFile())));
-                    $xPrevious->appendChild($DOM->createElement('s:line',$h($previous->getLine())));
-                    $xPrevious->appendChild($DOM->createElement('s:code',$h($previous->getCode())));
-                    $xPrevious->appendChild($DOM->createElement('s:stacktrace',$h($previous->getTraceAsString())));
+                    $xPrevious->appendChild($DOM->createElement('s:exception', $h(get_class($previous))));
+                    $xPrevious->appendChild($DOM->createElement('s:message', $h($previous->getMessage())));
+                    $xPrevious->appendChild($DOM->createElement('s:file', $h($previous->getFile())));
+                    $xPrevious->appendChild($DOM->createElement('s:line', $h($previous->getLine())));
+                    $xPrevious->appendChild($DOM->createElement('s:code', $h($previous->getCode())));
+                    $xPrevious->appendChild($DOM->createElement('s:stacktrace', $h($previous->getTraceAsString())));
                     $error->appendChild($xPrevious);
                 }
             }
 
 
-            if($e instanceof Exception) {
+            if ($e instanceof Exception) {
 
                 $httpCode = $e->getHTTPCode();
-                $e->serialize($this,$error);
+                $e->serialize($this, $error);
                 $headers = $e->getHTTPHeaders($this);
 
             } else {
@@ -329,11 +332,12 @@ class Server extends EventEmitter {
      * @param string $uri
      * @return void
      */
-    function setBaseUri($uri) {
+    function setBaseUri($uri)
+    {
 
         // If the baseUri does not end with a slash, we must add it
-        if ($uri[strlen($uri)-1]!=='/')
-            $uri.='/';
+        if ($uri[strlen($uri) - 1] !== '/')
+            $uri .= '/';
 
         $this->baseUri = $uri;
 
@@ -344,7 +348,8 @@ class Server extends EventEmitter {
      *
      * @return string
      */
-    function getBaseUri() {
+    function getBaseUri()
+    {
 
         if (is_null($this->baseUri)) $this->baseUri = $this->guessBaseUri();
         return $this->baseUri;
@@ -359,7 +364,8 @@ class Server extends EventEmitter {
      *
      * @return string
      */
-    function guessBaseUri() {
+    function guessBaseUri()
+    {
 
         $pathInfo = $this->httpRequest->getRawServerValue('PATH_INFO');
         $uri = $this->httpRequest->getRawServerValue('REQUEST_URI');
@@ -368,8 +374,8 @@ class Server extends EventEmitter {
         if (!empty($pathInfo)) {
 
             // We need to make sure we ignore the QUERY_STRING part
-            if ($pos = strpos($uri,'?'))
-                $uri = substr($uri,0,$pos);
+            if ($pos = strpos($uri, '?'))
+                $uri = substr($uri, 0, $pos);
 
             // PATH_INFO is only set for urls, such as: /example.php/path
             // in that case PATH_INFO contains '/path'.
@@ -379,12 +385,12 @@ class Server extends EventEmitter {
             $decodedUri = URLUtil::decodePath($uri);
 
             // A simple sanity check:
-            if(substr($decodedUri,strlen($decodedUri)-strlen($pathInfo))===$pathInfo) {
-                $baseUri = substr($decodedUri,0,strlen($decodedUri)-strlen($pathInfo));
-                return rtrim($baseUri,'/') . '/';
+            if (substr($decodedUri, strlen($decodedUri) - strlen($pathInfo)) === $pathInfo) {
+                $baseUri = substr($decodedUri, 0, strlen($decodedUri) - strlen($pathInfo));
+                return rtrim($baseUri, '/') . '/';
             }
 
-            throw new Exception('The REQUEST_URI ('. $uri . ') did not end with the contents of PATH_INFO (' . $pathInfo . '). This server might be misconfigured.');
+            throw new Exception('The REQUEST_URI (' . $uri . ') did not end with the contents of PATH_INFO (' . $pathInfo . '). This server might be misconfigured.');
 
         }
 
@@ -401,7 +407,8 @@ class Server extends EventEmitter {
      * @param ServerPlugin $plugin
      * @return void
      */
-    function addPlugin(ServerPlugin $plugin) {
+    function addPlugin(ServerPlugin $plugin)
+    {
 
         $this->plugins[$plugin->getPluginName()] = $plugin;
         $plugin->initialize($this);
@@ -416,14 +423,15 @@ class Server extends EventEmitter {
      * @param string $name
      * @return ServerPlugin
      */
-    function getPlugin($name) {
+    function getPlugin($name)
+    {
 
         if (isset($this->plugins[$name]))
             return $this->plugins[$name];
 
         // This is a fallback and deprecated.
-        foreach($this->plugins as $plugin) {
-            if (get_class($plugin)===$name) return $plugin;
+        foreach ($this->plugins as $plugin) {
+            if (get_class($plugin) === $name) return $plugin;
         }
 
         return null;
@@ -435,7 +443,8 @@ class Server extends EventEmitter {
      *
      * @return array
      */
-    function getPlugins() {
+    function getPlugins()
+    {
 
         return $this->plugins;
 
@@ -446,9 +455,14 @@ class Server extends EventEmitter {
      *
      * @param RequestInterface $request
      * @param ResponseInterface $response
+     * @param $sendResponse Wether to send the HTTP response to the DAV client.
+     *
+     * @throws Exception\NotImplemented
+     * @throws Exception\PreconditionFailed
      * @return void
      */
-    function invokeMethod(RequestInterface $request, ResponseInterface $response) {
+    function invokeMethod(RequestInterface $request, ResponseInterface $response, $sendResponse = true)
+    {
 
         $method = $request->getMethod();
 
@@ -476,8 +490,10 @@ class Server extends EventEmitter {
         if (!$this->emit('afterMethod:' . $method, [$request, $response])) return;
         if (!$this->emit('afterMethod', [$request, $response])) return;
 
-        $this->sapi->sendResponse($response);
-        $this->emit('afterResponse', [$request, $response]);
+        if ($sendResponse) {
+            $this->sapi->sendResponse($response);
+            $this->emit('afterResponse', [$request, $response]);
+        }
 
     }
 
@@ -489,7 +505,8 @@ class Server extends EventEmitter {
      * @param string $path
      * @return array
      */
-    function getAllowedMethods($path) {
+    function getAllowedMethods($path)
+    {
 
         $methods = [
             'OPTIONS',
@@ -512,7 +529,7 @@ class Server extends EventEmitter {
         }
 
         // We're also checking if any of the plugins register any new methods
-        foreach($this->plugins as $plugin) $methods = array_merge($methods, $plugin->getHTTPMethods($path));
+        foreach ($this->plugins as $plugin) $methods = array_merge($methods, $plugin->getHTTPMethods($path));
         array_unique($methods);
 
         return $methods;
@@ -524,7 +541,8 @@ class Server extends EventEmitter {
      *
      * @return string
      */
-    function getRequestUri() {
+    function getRequestUri()
+    {
 
         return $this->calculateUri($this->httpRequest->getUrl());
 
@@ -537,23 +555,24 @@ class Server extends EventEmitter {
      * @throws Exception\Forbidden A permission denied exception is thrown whenever there was an attempt to supply a uri outside of the base uri
      * @return string
      */
-    function calculateUri($uri) {
+    function calculateUri($uri)
+    {
 
-        if ($uri[0]!='/' && strpos($uri,'://')) {
+        if ($uri[0] != '/' && strpos($uri, '://')) {
 
-            $uri = parse_url($uri,PHP_URL_PATH);
+            $uri = parse_url($uri, PHP_URL_PATH);
 
         }
 
-        $uri = str_replace('//','/',$uri);
+        $uri = str_replace('//', '/', $uri);
 
-        if (strpos($uri,$this->getBaseUri())===0) {
+        if (strpos($uri, $this->getBaseUri()) === 0) {
 
-            return trim(URLUtil::decodePath(substr($uri,strlen($this->getBaseUri()))),'/');
+            return trim(URLUtil::decodePath(substr($uri, strlen($this->getBaseUri()))), '/');
 
-        // A special case, if the baseUri was accessed without a trailing
-        // slash, we'll accept it as well.
-        } elseif ($uri.'/' === $this->getBaseUri()) {
+            // A special case, if the baseUri was accessed without a trailing
+            // slash, we'll accept it as well.
+        } elseif ($uri . '/' === $this->getBaseUri()) {
 
             return '';
 
@@ -574,7 +593,8 @@ class Server extends EventEmitter {
      * @param mixed $default
      * @return int
      */
-    function getHTTPDepth($default = self::DEPTH_INFINITY) {
+    function getHTTPDepth($default = self::DEPTH_INFINITY)
+    {
 
         // If its not set, we'll grab the default
         $depth = $this->httpRequest->getHeader('Depth');
@@ -605,20 +625,21 @@ class Server extends EventEmitter {
      *
      * @return array|null
      */
-    function getHTTPRange() {
+    function getHTTPRange()
+    {
 
         $range = $this->httpRequest->getHeader('range');
         if (is_null($range)) return null;
 
         // Matching "Range: bytes=1234-5678: both numbers are optional
 
-        if (!preg_match('/^bytes=([0-9]*)-([0-9]*)$/i',$range,$matches)) return null;
+        if (!preg_match('/^bytes=([0-9]*)-([0-9]*)$/i', $range, $matches)) return null;
 
-        if ($matches[1]==='' && $matches[2]==='') return null;
+        if ($matches[1] === '' && $matches[2] === '') return null;
 
         return [
-            $matches[1]!==''?$matches[1]:null,
-            $matches[2]!==''?$matches[2]:null,
+            $matches[1] !== '' ? $matches[1] : null,
+            $matches[2] !== '' ? $matches[2] : null,
         ];
 
     }
@@ -649,15 +670,16 @@ class Server extends EventEmitter {
      *
      * @return array
      */
-    function getHTTPPrefer() {
+    function getHTTPPrefer()
+    {
 
         $result = [
-            'return-asynch'         => false,
-            'return-minimal'        => false,
+            'return-asynch' => false,
+            'return-minimal' => false,
             'return-representation' => false,
-            'wait'                  => null,
-            'strict'                => false,
-            'lenient'               => false,
+            'wait' => null,
+            'strict' => false,
+            'lenient' => false,
         ];
 
         if ($prefer = $this->httpRequest->getHeader('Prefer')) {
@@ -666,16 +688,16 @@ class Server extends EventEmitter {
                 explode(',', $prefer)
             );
 
-            foreach($parameters as $parameter) {
+            foreach ($parameters as $parameter) {
 
                 // Right now our regex only supports the tokens actually
                 // specified in the draft. We may need to expand this if new
                 // tokens get registered.
-                if(!preg_match('/^(?P<token>[a-z0-9-]+)(?:=(?P<value>[0-9]+))?$/', $parameter, $matches)) {
+                if (!preg_match('/^(?P<token>[a-z0-9-]+)(?:=(?P<value>[0-9]+))?$/', $parameter, $matches)) {
                     continue;
                 }
 
-                switch($matches['token']) {
+                switch ($matches['token']) {
 
                     case 'return-asynch' :
                     case 'return-minimal' :
@@ -692,7 +714,7 @@ class Server extends EventEmitter {
 
             }
 
-        } elseif ($this->httpRequest->getHeader('Brief')=='t') {
+        } elseif ($this->httpRequest->getHeader('Brief') == 't') {
             $result['return-minimal'] = true;
         }
 
@@ -723,15 +745,16 @@ class Server extends EventEmitter {
      *         subtree.
      * @return array
      */
-    function getCopyAndMoveInfo(RequestInterface $request) {
+    function getCopyAndMoveInfo(RequestInterface $request)
+    {
 
         // Collecting the relevant HTTP headers
         if (!$request->getHeader('Destination')) throw new Exception\BadRequest('The destination header was not supplied');
         $destination = $this->calculateUri($request->getHeader('Destination'));
         $overwrite = $request->getHeader('Overwrite');
         if (!$overwrite) $overwrite = 'T';
-        if (strtoupper($overwrite)=='T') $overwrite = true;
-        elseif (strtoupper($overwrite)=='F') $overwrite = false;
+        if (strtoupper($overwrite) == 'T') $overwrite = true;
+        elseif (strtoupper($overwrite) == 'F') $overwrite = false;
         // We need to throw a bad request exception, if the header was invalid
         else throw new Exception\BadRequest('The HTTP Overwrite header should be either T or F');
 
@@ -752,7 +775,7 @@ class Server extends EventEmitter {
 
             // If this succeeded, it means the destination already exists
             // we'll need to throw precondition failed in case overwrite is false
-            if (!$overwrite) throw new Exception\PreconditionFailed('The destination node already exists, and the overwrite header is set to false','Overwrite');
+            if (!$overwrite) throw new Exception\PreconditionFailed('The destination node already exists, and the overwrite header is set to false', 'Overwrite');
 
         } catch (Exception\NotFound $e) {
 
@@ -762,18 +785,18 @@ class Server extends EventEmitter {
         }
 
         $requestPath = $request->getPath();
-        if ($destination===$requestPath) {
+        if ($destination === $requestPath) {
             throw new Exception\Forbidden('Source and destination uri are identical.');
         }
-        if (substr($destination, 0, strlen($requestPath)+1) === $requestPath . '/') {
+        if (substr($destination, 0, strlen($requestPath) + 1) === $requestPath . '/') {
             throw new Exception\Conflict('The destination may not be part of the same subtree as the source path.');
         }
 
         // These are the three relevant properties we need to return
         return [
-            'destination'       => $destination,
+            'destination' => $destination,
             'destinationExists' => !!$destinationNode,
-            'destinationNode'   => $destinationNode,
+            'destinationNode' => $destinationNode,
         ];
 
     }
@@ -788,9 +811,10 @@ class Server extends EventEmitter {
      * @param string $path
      * @param array $propertyNames
      */
-    function getProperties($path, $propertyNames) {
+    function getProperties($path, $propertyNames)
+    {
 
-        $result = $this->getPropertiesForPath($path,$propertyNames,0);
+        $result = $this->getPropertiesForPath($path, $propertyNames, 0);
         return $result[0][200];
 
     }
@@ -807,10 +831,11 @@ class Server extends EventEmitter {
      * @param array $propertyNames
      * @return array
      */
-    function getPropertiesForChildren($path, $propertyNames) {
+    function getPropertiesForChildren($path, $propertyNames)
+    {
 
         $result = [];
-        foreach($this->getPropertiesForPath($path,$propertyNames,1) as $k=>$row) {
+        foreach ($this->getPropertiesForPath($path, $propertyNames, 1) as $k => $row) {
 
             // Skipping the parent path
             if ($k === 0) continue;
@@ -834,25 +859,26 @@ class Server extends EventEmitter {
      * @param string $path
      * @return array
      */
-    function getHTTPHeaders($path) {
+    function getHTTPHeaders($path)
+    {
 
         $propertyMap = [
-            '{DAV:}getcontenttype'   => 'Content-Type',
+            '{DAV:}getcontenttype' => 'Content-Type',
             '{DAV:}getcontentlength' => 'Content-Length',
-            '{DAV:}getlastmodified'  => 'Last-Modified',
-            '{DAV:}getetag'          => 'ETag',
+            '{DAV:}getlastmodified' => 'Last-Modified',
+            '{DAV:}getetag' => 'ETag',
         ];
 
-        $properties = $this->getProperties($path,array_keys($propertyMap));
+        $properties = $this->getProperties($path, array_keys($propertyMap));
 
         $headers = [];
-        foreach($propertyMap as $property=>$header) {
+        foreach ($propertyMap as $property => $header) {
             if (!isset($properties[$property])) continue;
 
             if (is_scalar($properties[$property])) {
                 $headers[$header] = $properties[$property];
 
-            // GetLastModified gets special cased
+                // GetLastModified gets special cased
             } elseif ($properties[$property] instanceof Property\GetLastModified) {
                 $headers[$header] = HTTP\Util::toHTTPDate($properties[$property]->getTime());
             }
@@ -866,7 +892,8 @@ class Server extends EventEmitter {
     /**
      * Small helper to support PROPFIND with DEPTH_INFINITY.
      */
-    private function addPathNodesRecursively(&$propFindRequests, PropFind $propFind) {
+    private function addPathNodesRecursively(&$propFindRequests, PropFind $propFind)
+    {
 
         $newDepth = $propFind->getDepth();
         $path = $propFind->getPath();
@@ -875,10 +902,10 @@ class Server extends EventEmitter {
             $newDepth--;
         }
 
-        foreach($this->tree->getChildren($path) as $childNode) {
+        foreach ($this->tree->getChildren($path) as $childNode) {
             $subPropFind = clone $propFind;
             $subPropFind->setDepth($newDepth);
-            $subPath = $path !== ''? $path . '/' . $childNode->getName() : $childNode->getName();
+            $subPath = $path !== '' ? $path . '/' . $childNode->getName() : $childNode->getName();
             $subPropFind->setPath($subPath);
 
             $propFindRequests[] = [
@@ -886,7 +913,7 @@ class Server extends EventEmitter {
                 $childNode
             ];
 
-            if (($newDepth===self::DEPTH_INFINITY || $newDepth>=1) && $childNode instanceof ICollection) {
+            if (($newDepth === self::DEPTH_INFINITY || $newDepth >= 1) && $childNode instanceof ICollection) {
                 $this->addPathNodesRecursively($propFindRequests, $subPropFind);
             }
 
@@ -907,14 +934,15 @@ class Server extends EventEmitter {
      * @param int $depth
      * @return array
      */
-    function getPropertiesForPath($path, $propertyNames = [], $depth = 0) {
+    function getPropertiesForPath($path, $propertyNames = [], $depth = 0)
+    {
 
         // The only two options for the depth of a propfind is 0 or 1 - as long as depth infinity is not enabled
         if (!$this->enablePropfindDepthInfinity && $depth != 0) $depth = 1;
 
-        $path = trim($path,'/');
+        $path = trim($path, '/');
 
-        $propFindType = $propertyNames?PropFind::NORMAL:PropFind::ALLPROPS;
+        $propFindType = $propertyNames ? PropFind::NORMAL : PropFind::ALLPROPS;
         $propFind = new PropFind($path, $propertyNames, $depth, $propFindType);
 
         $parentNode = $this->tree->getNodeForPath($path);
@@ -930,7 +958,7 @@ class Server extends EventEmitter {
 
         $returnPropertyList = [];
 
-        foreach($propFindRequests as $propFindRequest) {
+        foreach ($propFindRequests as $propFindRequest) {
 
             list($propFind, $node) = $propFindRequest;
             $r = $this->getPropertiesByNode($propFind, $node);
@@ -944,7 +972,7 @@ class Server extends EventEmitter {
                 // principals. This is non-standard, but we support it.
                 $resourceType = $this->getResourceTypeForNode($node);
                 if (in_array('{DAV:}collection', $resourceType) || in_array('{DAV:}principal', $resourceType)) {
-                    $result['href'].='/';
+                    $result['href'] .= '/';
                 }
                 $returnPropertyList[] = $result;
             }
@@ -969,24 +997,25 @@ class Server extends EventEmitter {
      * @param array $propertyNames
      * @return array
      */
-    function getPropertiesForMultiplePaths(array $paths, array $propertyNames = []) {
+    function getPropertiesForMultiplePaths(array $paths, array $propertyNames = [])
+    {
 
         $result = [
         ];
 
         $nodes = $this->tree->getMultipleNodes($paths);
 
-        foreach($nodes as $path=>$node) {
+        foreach ($nodes as $path => $node) {
 
             $propFind = new PropFind($path, $propertyNames);
-            $r = $this->getPropertiesByNode($propFind,$node);
+            $r = $this->getPropertiesByNode($propFind, $node);
             if ($r) {
                 $result[$path] = $propFind->getResultForMultiStatus();
                 $result[$path]['href'] = $path;
 
                 $resourceType = $this->getResourceTypeForNode($node);
                 if (in_array('{DAV:}collection', $resourceType) || in_array('{DAV:}principal', $resourceType)) {
-                    $result[$path]['href'].='/';
+                    $result[$path]['href'] .= '/';
                 }
             }
 
@@ -1011,7 +1040,8 @@ class Server extends EventEmitter {
      * @param INode $node
      * @return bool
      */
-    function getPropertiesByNode(PropFind $propFind, INode $node) {
+    function getPropertiesByNode(PropFind $propFind, INode $node)
+    {
 
         return $this->emit('propFind', [$propFind, $node]);
 
@@ -1026,16 +1056,17 @@ class Server extends EventEmitter {
      *
      * This method will return true if the file was actually created
      *
-     * @param string   $uri
+     * @param string $uri
      * @param resource $data
-     * @param string   $etag
+     * @param string $etag
      * @return bool
      */
-    function createFile($uri,$data, &$etag = null) {
+    function createFile($uri, $data, &$etag = null)
+    {
 
-        list($dir,$name) = URLUtil::splitPath($uri);
+        list($dir, $name) = URLUtil::splitPath($uri);
 
-        if (!$this->emit('beforeBind',[$uri])) return false;
+        if (!$this->emit('beforeBind', [$uri])) return false;
 
         $parent = $this->tree->getNodeForPath($dir);
         if (!$parent instanceof ICollection) {
@@ -1048,16 +1079,16 @@ class Server extends EventEmitter {
         //
         // If $modified is true, we must not send back an etag.
         $modified = false;
-        if (!$this->emit('beforeCreateFile',[$uri, &$data, $parent, &$modified])) return false;
+        if (!$this->emit('beforeCreateFile', [$uri, &$data, $parent, &$modified])) return false;
 
-        $etag = $parent->createFile($name,$data);
+        $etag = $parent->createFile($name, $data);
 
         if ($modified) $etag = null;
 
         $this->tree->markDirty($dir . '/' . $name);
 
-        $this->emit('afterBind',[$uri]);
-        $this->emit('afterCreateFile',[$uri, $parent]);
+        $this->emit('afterBind', [$uri]);
+        $this->emit('afterCreateFile', [$uri, $parent]);
 
         return true;
     }
@@ -1067,12 +1098,13 @@ class Server extends EventEmitter {
      *
      * This method will return true if the file was actually updated
      *
-     * @param string   $uri
+     * @param string $uri
      * @param resource $data
-     * @param string   $etag
+     * @param string $etag
      * @return bool
      */
-    function updateFile($uri,$data, &$etag = null) {
+    function updateFile($uri, $data, &$etag = null)
+    {
 
         $node = $this->tree->getNodeForPath($uri);
 
@@ -1082,15 +1114,14 @@ class Server extends EventEmitter {
         //
         // If $modified is true, we must not send back an etag.
         $modified = false;
-        if (!$this->emit('beforeWriteContent',[$uri, $node, &$data, &$modified])) return false;
+        if (!$this->emit('beforeWriteContent', [$uri, $node, &$data, &$modified])) return false;
 
         $etag = $node->put($data);
         if ($modified) $etag = null;
-        $this->emit('afterWriteContent',[$uri, $node]);
+        $this->emit('afterWriteContent', [$uri, $node]);
 
         return true;
     }
-
 
 
     /**
@@ -1099,9 +1130,10 @@ class Server extends EventEmitter {
      * @param string $uri
      * @return void
      */
-    function createDirectory($uri) {
+    function createDirectory($uri)
+    {
 
-        $this->createCollection($uri,['{DAV:}collection'], []);
+        $this->createCollection($uri, ['{DAV:}collection'], []);
 
     }
 
@@ -1118,9 +1150,10 @@ class Server extends EventEmitter {
      * @param array $properties A list of properties
      * @return array|null
      */
-    function createCollection($uri, array $resourceType, array $properties) {
+    function createCollection($uri, array $resourceType, array $properties)
+    {
 
-        list($parentUri,$newName) = URLUtil::splitPath($uri);
+        list($parentUri, $newName) = URLUtil::splitPath($uri);
 
         // Making sure {DAV:}collection was specified as resourceType
         if (!in_array('{DAV:}collection', $resourceType)) {
@@ -1145,7 +1178,6 @@ class Server extends EventEmitter {
         }
 
 
-
         // Making sure the child does not already exist
         try {
             $parent->getChild($newName);
@@ -1158,7 +1190,7 @@ class Server extends EventEmitter {
         }
 
 
-        if (!$this->emit('beforeBind',[$uri])) return;
+        if (!$this->emit('beforeBind', [$uri])) return;
 
         // There are 2 modes of operation. The standard collection
         // creates the directory, and then updates properties
@@ -1170,7 +1202,7 @@ class Server extends EventEmitter {
         } else {
 
             // No special resourcetypes are supported
-            if (count($resourceType)>1) {
+            if (count($resourceType) > 1) {
                 throw new Exception\InvalidResourceType('The {DAV:}resourcetype you specified is not supported here.');
             }
 
@@ -1179,7 +1211,7 @@ class Server extends EventEmitter {
             $exception = null;
             $errorResult = null;
 
-            if (count($properties)>0) {
+            if (count($properties) > 0) {
 
                 try {
 
@@ -1198,7 +1230,7 @@ class Server extends EventEmitter {
             }
 
             if ($rollBack) {
-                if (!$this->emit('beforeUnbind',[$uri])) return;
+                if (!$this->emit('beforeUnbind', [$uri])) return;
                 $this->tree->delete($uri);
 
                 // Re-throwing exception
@@ -1209,7 +1241,7 @@ class Server extends EventEmitter {
                 $newResult = [
                     'href' => $uri,
                 ];
-                foreach($errorResult as $property=>$code) {
+                foreach ($errorResult as $property => $code) {
                     if (!isset($newResult[$code])) {
                         $newResult[$code] = [$property => null];
                     } else {
@@ -1221,7 +1253,7 @@ class Server extends EventEmitter {
 
         }
         $this->tree->markDirty($parentUri);
-        $this->emit('afterBind',[$uri]);
+        $this->emit('afterBind', [$uri]);
 
     }
 
@@ -1242,7 +1274,8 @@ class Server extends EventEmitter {
      * @param array $properties
      * @return array
      */
-    function updateProperties($path, array $properties) {
+    function updateProperties($path, array $properties)
+    {
 
         $propPatch = new PropPatch($properties);
         $this->emit('propPatch', [$path, $propPatch]);
@@ -1274,7 +1307,8 @@ class Server extends EventEmitter {
      * @param ResponseInterface $response
      * @return bool
      */
-    function checkPreconditions(RequestInterface $request, ResponseInterface $response) {
+    function checkPreconditions(RequestInterface $request, ResponseInterface $response)
+    {
 
         $path = $request->getPath();
         $node = null;
@@ -1290,27 +1324,27 @@ class Server extends EventEmitter {
             try {
                 $node = $this->tree->getNodeForPath($path);
             } catch (Exception\NotFound $e) {
-                throw new Exception\PreconditionFailed('An If-Match header was specified and the resource did not exist','If-Match');
+                throw new Exception\PreconditionFailed('An If-Match header was specified and the resource did not exist', 'If-Match');
             }
 
             // Only need to check entity tags if they are not *
-            if ($ifMatch!=='*') {
+            if ($ifMatch !== '*') {
 
                 // There can be multiple etags
-                $ifMatch = explode(',',$ifMatch);
+                $ifMatch = explode(',', $ifMatch);
                 $haveMatch = false;
-                foreach($ifMatch as $ifMatchItem) {
+                foreach ($ifMatch as $ifMatchItem) {
 
                     // Stripping any extra spaces
-                    $ifMatchItem = trim($ifMatchItem,' ');
+                    $ifMatchItem = trim($ifMatchItem, ' ');
 
                     $etag = $node->getETag();
-                    if ($etag===$ifMatchItem) {
+                    if ($etag === $ifMatchItem) {
                         $haveMatch = true;
                     } else {
                         // Evolution has a bug where it sometimes prepends the "
                         // with a \. This is our workaround.
-                        if (str_replace('\\"','"', $ifMatchItem) === $etag) {
+                        if (str_replace('\\"', '"', $ifMatchItem) === $etag) {
                             $haveMatch = true;
                         }
                     }
@@ -1318,7 +1352,7 @@ class Server extends EventEmitter {
                 }
                 if (!$haveMatch) {
                     if ($etag) $response->setHeader('ETag', $etag);
-                     throw new Exception\PreconditionFailed('An If-Match header was specified, but none of the specified the ETags matched.','If-Match');
+                    throw new Exception\PreconditionFailed('An If-Match header was specified, but none of the specified the ETags matched.', 'If-Match');
                 }
             }
         }
@@ -1339,19 +1373,19 @@ class Server extends EventEmitter {
             }
             if ($nodeExists) {
                 $haveMatch = false;
-                if ($ifNoneMatch==='*') $haveMatch = true;
+                if ($ifNoneMatch === '*') $haveMatch = true;
                 else {
 
                     // There might be multiple etags
                     $ifNoneMatch = explode(',', $ifNoneMatch);
                     $etag = $node->getETag();
 
-                    foreach($ifNoneMatch as $ifNoneMatchItem) {
+                    foreach ($ifNoneMatch as $ifNoneMatchItem) {
 
                         // Stripping any extra spaces
-                        $ifNoneMatchItem = trim($ifNoneMatchItem,' ');
+                        $ifNoneMatchItem = trim($ifNoneMatchItem, ' ');
 
-                        if ($etag===$ifNoneMatchItem) $haveMatch = true;
+                        if ($etag === $ifNoneMatchItem) $haveMatch = true;
 
                     }
 
@@ -1359,11 +1393,11 @@ class Server extends EventEmitter {
 
                 if ($haveMatch) {
                     if ($etag) $response->setHeader('ETag', $etag);
-                    if ($request->getMethod()==='GET') {
+                    if ($request->getMethod() === 'GET') {
                         $response->setStatus(304);
                         return false;
                     } else {
-                        throw new Exception\PreconditionFailed('An If-None-Match header was specified, but the ETag matched (or * was specified).','If-None-Match');
+                        throw new Exception\PreconditionFailed('An If-None-Match header was specified, but the ETag matched (or * was specified).', 'If-None-Match');
                     }
                 }
             }
@@ -1411,7 +1445,7 @@ class Server extends EventEmitter {
                 if ($lastMod) {
                     $lastMod = new \DateTime('@' . $lastMod);
                     if ($lastMod > $date) {
-                        throw new Exception\PreconditionFailed('An If-Unmodified-Since header was specified, but the entity has been changed since the specified date.','If-Unmodified-Since');
+                        throw new Exception\PreconditionFailed('An If-Unmodified-Since header was specified, but the entity has been changed since the specified date.', 'If-Unmodified-Since');
                     }
                 }
             }
@@ -1428,8 +1462,8 @@ class Server extends EventEmitter {
         // Sync and Lock plugin can pick up.
         $ifConditions = $this->getIfConditions($request);
 
-        foreach($ifConditions as $kk => $ifCondition) {
-            foreach($ifCondition['tokens'] as $ii => $token) {
+        foreach ($ifConditions as $kk => $ifCondition) {
+            foreach ($ifCondition['tokens'] as $ii => $token) {
                 $ifConditions[$kk]['tokens'][$ii]['validToken'] = false;
             }
         }
@@ -1437,19 +1471,19 @@ class Server extends EventEmitter {
         // Plugins are responsible for validating all the tokens.
         // If a plugin deemed a token 'valid', it will set 'validToken' to
         // true.
-        $this->emit('validateTokens', [ $request, &$ifConditions ]);
+        $this->emit('validateTokens', [$request, &$ifConditions]);
 
         // Now we're going to analyze the result.
 
         // Every ifCondition needs to validate to true, so we exit as soon as
         // we have an invalid condition.
-        foreach($ifConditions as $ifCondition) {
+        foreach ($ifConditions as $ifCondition) {
 
             $uri = $ifCondition['uri'];
             $tokens = $ifCondition['tokens'];
 
             // We only need 1 valid token for the condition to succeed.
-            foreach($tokens as $token) {
+            foreach ($tokens as $token) {
 
                 $tokenValid = $token['validToken'] || !$token['token'];
 
@@ -1557,7 +1591,8 @@ class Server extends EventEmitter {
      *
      * @return array
      */
-    function getIfConditions(RequestInterface $request) {
+    function getIfConditions(RequestInterface $request)
+    {
 
         $header = $request->getHeader('If');
         if (!$header) return [];
@@ -1565,20 +1600,20 @@ class Server extends EventEmitter {
         $matches = [];
 
         $regex = '/(?:\<(?P<uri>.*?)\>\s)?\((?P<not>Not\s)?(?:\<(?P<token>[^\>]*)\>)?(?:\s?)(?:\[(?P<etag>[^\]]*)\])?\)/im';
-        preg_match_all($regex,$header,$matches,PREG_SET_ORDER);
+        preg_match_all($regex, $header, $matches, PREG_SET_ORDER);
 
         $conditions = [];
 
-        foreach($matches as $match) {
+        foreach ($matches as $match) {
 
             // If there was no uri specified in this match, and there were
             // already conditions parsed, we add the condition to the list of
             // conditions for the previous uri.
             if (!$match['uri'] && count($conditions)) {
-                $conditions[count($conditions)-1]['tokens'][] = [
-                    'negate' => $match['not']?true:false,
-                    'token'  => $match['token'],
-                    'etag'   => isset($match['etag'])?$match['etag']:''
+                $conditions[count($conditions) - 1]['tokens'][] = [
+                    'negate' => $match['not'] ? true : false,
+                    'token' => $match['token'],
+                    'etag' => isset($match['etag']) ? $match['etag'] : ''
                 ];
             } else {
 
@@ -1589,12 +1624,12 @@ class Server extends EventEmitter {
                 }
 
                 $conditions[] = [
-                    'uri'   => $realUri,
+                    'uri' => $realUri,
                     'tokens' => [
                         [
-                            'negate' => $match['not']?true:false,
-                            'token'  => $match['token'],
-                            'etag'   => isset($match['etag'])?$match['etag']:''
+                            'negate' => $match['not'] ? true : false,
+                            'token' => $match['token'],
+                            'etag' => isset($match['etag']) ? $match['etag'] : ''
                         ]
                     ],
 
@@ -1613,10 +1648,11 @@ class Server extends EventEmitter {
      * @param INode $node
      * @return array
      */
-    function getResourceTypeForNode(INode $node) {
+    function getResourceTypeForNode(INode $node)
+    {
 
         $result = [];
-        foreach($this->resourceTypeMapping as $className => $resourceType) {
+        foreach ($this->resourceTypeMapping as $className => $resourceType) {
             if ($node instanceof $className) $result[] = $resourceType;
         }
         return $result;
@@ -1636,21 +1672,22 @@ class Server extends EventEmitter {
      * @param bool strip404s
      * @return string
      */
-    function generateMultiStatus(array $fileProperties, $strip404s = false) {
+    function generateMultiStatus(array $fileProperties, $strip404s = false)
+    {
 
-        $dom = new \DOMDocument('1.0','utf-8');
+        $dom = new \DOMDocument('1.0', 'utf-8');
         //$dom->formatOutput = true;
         $multiStatus = $dom->createElement('d:multistatus');
         $dom->appendChild($multiStatus);
 
         // Adding in default namespaces
-        foreach($this->xmlNamespaces as $namespace=>$prefix) {
+        foreach ($this->xmlNamespaces as $namespace => $prefix) {
 
-            $multiStatus->setAttribute('xmlns:' . $prefix,$namespace);
+            $multiStatus->setAttribute('xmlns:' . $prefix, $namespace);
 
         }
 
-        foreach($fileProperties as $entry) {
+        foreach ($fileProperties as $entry) {
 
             $href = $entry['href'];
             unset($entry['href']);
@@ -1659,8 +1696,8 @@ class Server extends EventEmitter {
                 unset($entry[404]);
             }
 
-            $response = new Property\Response($href,$entry);
-            $response->serialize($this,$multiStatus);
+            $response = new Property\Response($href, $entry);
+            $response->serialize($this, $multiStatus);
 
         }
 
@@ -1681,26 +1718,27 @@ class Server extends EventEmitter {
      * @param string $body xml body
      * @return array list of properties in need of updating or deletion
      */
-    function parsePropPatchRequest($body) {
+    function parsePropPatchRequest($body)
+    {
 
         //We'll need to change the DAV namespace declaration to something else in order to make it parsable
         $dom = XMLUtil::loadDOMDocument($body);
 
         $newProperties = [];
 
-        foreach($dom->firstChild->childNodes as $child) {
+        foreach ($dom->firstChild->childNodes as $child) {
 
             if ($child->nodeType !== XML_ELEMENT_NODE) continue;
 
             $operation = XMLUtil::toClarkNotation($child);
 
-            if ($operation!=='{DAV:}set' && $operation!=='{DAV:}remove') continue;
+            if ($operation !== '{DAV:}set' && $operation !== '{DAV:}remove') continue;
 
             $innerProperties = XMLUtil::parseProperties($child, $this->propertyMap);
 
-            foreach($innerProperties as $propertyName=>$propertyValue) {
+            foreach ($innerProperties as $propertyName => $propertyValue) {
 
-                if ($operation==='{DAV:}remove') {
+                if ($operation === '{DAV:}remove') {
                     $propertyValue = null;
                 }
 
@@ -1723,13 +1761,14 @@ class Server extends EventEmitter {
      * @param string $body
      * @return array
      */
-    function parsePropFindRequest($body) {
+    function parsePropFindRequest($body)
+    {
 
         // If the propfind body was empty, it means IE is requesting 'all' properties
         if (!$body) return [];
 
         $dom = XMLUtil::loadDOMDocument($body);
-        $elem = $dom->getElementsByTagNameNS('urn:DAV','propfind')->item(0);
+        $elem = $dom->getElementsByTagNameNS('urn:DAV', 'propfind')->item(0);
         if (is_null($elem)) throw new Exception\UnsupportedMediaType('We could not find a {DAV:}propfind element in the xml request body');
 
         return array_keys(XMLUtil::parseProperties($elem));
