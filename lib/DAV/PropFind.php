@@ -58,15 +58,8 @@ class PropFind {
                 '{DAV:}getcontenttype',
             ];
         }
-
-        foreach ($this->properties as $propertyName) {
-
-            // Seeding properties with 404's.
-            $this->result[$propertyName] = [404, null];
-
-        }
-        $this->itemsLeft = count($this->result);
-
+        
+        $this->init();
     }
 
     /**
@@ -343,5 +336,25 @@ class PropFind {
      * @var int
      */
     protected $itemsLeft;
-
+    
+    /**
+     * Init a zero state
+     */
+    private function init()
+    {
+        $this->result = [];
+        foreach ($this->properties as $propertyName) {
+            // Seeding properties with 404's.
+            $this->result[$propertyName] = [404, null];
+        }
+        $this->itemsLeft = count($this->result);
+    }
+    
+    /**
+     * Always reset state to the initial while cloning the object
+     */
+    public function __clone()
+    {
+        $this->init();
+    }
 }
